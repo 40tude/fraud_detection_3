@@ -1,17 +1,25 @@
 // src/main.rs
 
-mod command_bus;
-mod commands;
-mod domain;
-mod state_machine;
+// They are moved to src/lib.rs
+// mod command_bus;
+// mod commands;
+// mod domain;
+// mod state_machine;
 
-use command_bus::dispatch;
-use commands::process_transaction::{ProcessTransaction, ProcessTransactionHandler};
-use state_machine::event::Event;
+// use command_bus::dispatch;
+// use commands::process_transaction::{ProcessTransaction, ProcessTransactionHandler};
+// use state_machine::event::Event;
+// use domain::fraud_scorer::{FraudScorer, RandomScorer};
+// use domain::transaction::Transaction;
+// use state_machine::state::{Enriched, /*Persisted,*/ State, Validated};
 
-use domain::fraud_scorer::{FraudScorer, RandomScorer};
-use domain::transaction::Transaction;
-use state_machine::state::{Enriched, /*Persisted,*/ State, Validated};
+// Once the modules have been moved to src/lib.rs, add fraud_detection_3:: in order to access to the modules
+use fraud_detection_3::command_bus::dispatch;
+use fraud_detection_3::commands::process_transaction::{ProcessTransaction, ProcessTransactionHandler};
+use fraud_detection_3::domain::fraud_scorer::{FraudScorer, RandomScorer};
+use fraud_detection_3::domain::transaction::Transaction;
+use fraud_detection_3::state_machine::event::Event;
+use fraud_detection_3::state_machine::state::{Enriched, /*Persisted,*/ State, Validated};
 
 // fn run_state_machine() {
 //     let mut state: Box<dyn State> = Box::new(Validated);
@@ -33,6 +41,7 @@ fn run_state_machine(tx: &Transaction, scorer: &dyn FraudScorer) {
     let mut state: Box<dyn State> = Box::new(Validated);
 
     loop {
+        // Store current state's name before moving it
         let current_name = state.name();
 
         state = match state.name() {
