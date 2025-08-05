@@ -6,3 +6,9 @@ pub mod command_bus;
 pub mod commands;
 pub mod domain;
 pub mod state_machine;
+
+// added for the async version
+pub mod workers;
+
+// added for the version with persistence
+pub mod persistence;

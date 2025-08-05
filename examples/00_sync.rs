@@ -1,4 +1,4 @@
-// src/main.rs
+// examples/00_sync.rs | sync
 
 // They are moved to src/lib.rs
 // mod command_bus;
