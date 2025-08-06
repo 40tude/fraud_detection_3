@@ -269,3 +269,77 @@ name = "max_throughput"
 harness = false
 
 cargo bench --bench max_throughput
+
+
+
+
+## Profiling
+Cargo.toml
+[profile.release]
+debug = true  # to ease profiling reading
+
+Lancer WSL
+sudo apt update
+sudo apt dist-upgrade
+sudo apt upgrade
+sudo apt update && sudo apt install linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+    sudo apt install linux-tools-common linux-tools-generic si erreur
+    faut installer perf
+    find /usr/lib/linux-tools/ -name perf
+    alias alias perf=/usr/lib/linux-tools/5.15.0-151-generic/perf
+    ou alors
+        echo 'alias perf=/usr/lib/linux-tools/5.15.0-151-generic/perf' >> ~/.bashrc
+        source ~/.bashrc
+    ou alors    
+        sudo ln -sf /usr/lib/linux-tools/5.15.0-151-generic/perf /usr/bin/perf
+    perf --version
+    perf stat ls
+
+curl https://sh.rustup.rs -sSf | sh
+    ou alors
+        rustup update
+
+cargo install flamegraph
+
+cd /mnt/c/Users/phili/OneDrive/Documents/Programmation/rust/12_fraud_detection_3
+
+code .
+    En bas à gauche un encart vert avec écrit WSL: Ubuntu (ou WSL: <ta distribution>).
+    Indication que tout se fait désormais dans WSL : compilation, exécution, profilage.
+
+cargo build --release --example  06_mockml
+cargo flamegraph --example 06_mockml
+    cargo flamegraph --filter "sqlite|tokio|mockml"
+
+
+
+### lire un `flamegraph.svg`
+
+Une visualisation hiérarchique du **temps passé dans les appels de fonctions** pendant l'exécution du programme.
+
+#### 1. Axe horizontal = **temps total cumulé**
+* Plus une **barre est large**, plus **la fonction (et ses enfants)** ont consommé de **temps CPU**.
+* L’axe horizontal **n’est pas chronologique**, mais **quantitatif** : il montre **où ton CPU a été occupé**.
+
+#### 2. Axe vertical = **pile d'appels**
+* **En bas** : les appels proches du `main()` ou du point d'entrée.
+* **En haut** : les fonctions appelées *en dernier* (profondément imbriquées).
+* Chaque niveau représente une fonction appelée **par la fonction juste en dessous**.
+
+#### 3. Identifier les *hot paths*
+* Chercher les **barres les plus larges tout en haut**.
+* Elles représentent les fonctions qui **consomment le plus de temps CPU directement**, sans le déléguer à d’autres.
+* C’est là qu'on peut **optimiser le code**.
+
+Ouvrir `flamegraph.svg` dans un navigateur et repérer :
+1. **Les barres les plus larges du haut** → ce sont **les consommateurs principaux de CPU**
+2. En **survolant une barre**, on voit :
+   * Le nom de la fonction
+   * Le nombre d’échantillons (ticks)
+   * Le pourcentage du temps total
+
+Exemple :
+```text
+process_transaction (1000 samples, 82.1%)
+```
+Cela signifie que 82.1% du temps CPU a été passé dans ou sous `process_transaction`.
