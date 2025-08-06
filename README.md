@@ -1,3 +1,6 @@
+https://medium.com/@theopinionatedev/the-3-patterns-behind-every-scalable-rust-system-ive-built-06377a2fdad5
+
+
 ```
             +---------------------+
             |   Command Receiver  |
