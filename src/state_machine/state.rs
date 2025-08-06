@@ -1,6 +1,7 @@
 // src/state_machine/state.rs
 
 use super::event::Event;
+use crate::domain::fraud_scorer::FraudScorer;
 use std::any::Any;
 use std::fmt::Debug;
 
@@ -43,7 +44,7 @@ impl State for Validated {
 #[derive(Debug)]
 pub struct Enriched;
 
-use crate::domain::fraud_scorer::FraudScorer;
+// use crate::domain::fraud_scorer::FraudScorer;
 use crate::domain::transaction::Transaction;
 
 impl Enriched {

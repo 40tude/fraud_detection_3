@@ -2,7 +2,7 @@
 
 use crate::domain::repository::TransactionRepository;
 use crate::domain::transaction::Transaction;
-use rusqlite::{Connection, Result, params};
+use rusqlite::{Connection, /*Result,*/ params};
 use std::sync::Mutex;
 use tracing::debug;
 

@@ -121,5 +121,32 @@ Ou alors SQLite explorer/transaction/show table
 
 ## Mock ML model scorer (MlModelScorer via fake HTTP)
 
+Créer un trait `MlModelScorer` avec une méthode `score(&self, tx: &Transaction) -> f32`, puis une implémentation simulée qui renvoie un score fixe ou pseudo-aléatoire.
+Une nouvelle table dans la base
+
+Modèle de données dans src/domain/scoring.rs
+Trait de repository dans src/domain/repository.rs
+Implémentation SQLite : src/persistence/sqlite/scoring_repo.rs
+
+cargo add rand
+
+
+
+On va maintenant modifier le worker pour qu’il :
+
+Étapes prévues :
+ Ajouter un "scoring dummy" dans dispatcher.rs
+ Persister un ScoringResult
+ Ajouter le repo dans la démo (05_sqlite.rs)
+
+
+
+dispatcher.rs
+Modifie start_worker pour :
+simuler un score (aléatoire ici),
+construire un ScoringResult,
+le persister via un second repository.
+
+
 
 ## Real benchmarking with Criterion
