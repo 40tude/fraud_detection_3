@@ -150,3 +150,122 @@ le persister via un second repository.
 
 
 ## Real benchmarking with Criterion
+
+Add Criterion to Cargo.toml
+cargo add criterion --features html_reports
+Z! section dev-dependencies
+
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"] }
+
+[[bench]]
+name = "sqlite_trans_save"
+harness = false
+
+[[bench]]
+name = "sqlite_score_save"
+harness = false
+
+[[bench]]
+name = "end_to_end"
+harness = false
+
+
+
+Add benches/sqlite_trans_repo.rs 
+Note: This will create and write to `./bench_trans_save.db`. If needed, add logic to remove it between runs.
+
+
+Add benches/sqlite_scoring_repo.rs 
+Note: This will create and write to `./bench_score_save.db`. If needed, add logic to remove it between runs.
+
+
+cargo bench
+cargo bench --bench sqlite_trans_save
+cargo bench --bench sqlite_score_save
+Le rapport est dans target\criterion\report\index.html
+
+
+### Bench end to end
+Dans dispatcher.rs , ajouter 
+#[cfg(bench)]
+process_transaction_bench()...
+
+Cette version évite tokio et les mpsc pour isoler la logique du benchmark.
+
+Si besoin un jour ajouter cfg-if
+    [dependencies]
+    cfg-if = "1.0"
+
+    Puis 
+    cfg_if::cfg_if! {
+        if #[cfg(not(feature = "bench"))]{
+            use crate::domain::repository::{ScoreRepository, TransRepository};
+            use tokio::sync::mpsc::Receiver;
+            use tracing::{info /* , debug*/}; // For score generation
+        }
+    }
+
+Bien voir #[cfg(feature = "bench")] et #[cfg(not(feature = "bench"))] un peu partout
+
+Créer benches/end_to_end.rs
+
+Ajouter une feature "bench" a cargo.toml
+[features]
+bench = []
+
+Ajouter 
+[[bench]]
+name = "end_to_end"
+harness = false
+
+cargo bench --features bench --bench end_to_end
+
+Rapport dans /target/criterion
+Par exemple
+Mean: 19.289 ms per transaction
+    This value includes:
+    Saving the transaction to SQLite
+    Generating a score
+    Saving the score result
+    Since it's not using any async, channels, or concurrency in the benchmark (process_transaction_bench), this is a good baseline for pure synchronous throughput.
+    The std. dev. seems large (24.855 ms), so the performance varies a lot between runs. This could be due to disk I/O (especially on Windows) or internal SQLite locking.
+
+
+
+### max throughput
+To estimate theoretical max throughput, you want to strip down everything to the bare essentials and eliminate I/O bottlenecks.
+Here’s a breakdown of what you suggested, plus a few more ideas:
+
+Keep
+    Use multiple async workers (to simulate concurrency realistically)
+    Simulate message dispatching (via tokio::mpsc)
+    A minimal scoring logic (e.g. is_fraud = false)
+    In-memory storage only (no SQLite I/O)
+    Time just the worker processing loop
+
+Remove or minimize
+    Score generation randomness → use a constant
+    SQLite file/database → use an in-memory implementation of TransRepository and ScoreRepository
+    Logging (tracing) → disable it or feature-gate it out
+    Transaction construction randomness → create a single Transaction instance and clone it
+
+This would give you the upper bound of your architecture's throughput assuming:
+    No disk I/O
+    No ML model
+    No batch overhead
+    It's an excellent benchmark to evaluate:
+    The performance limit of your threading and async architecture
+    How much headroom you have for additional logic (ML, logging, etc.)
+
+Add benches/max_throughput.rs
+    This uses 4 async workers. You can tweak NUM_WORKERS as needed.
+    All data is stored in memory — no disk writes or random scoring.
+    It measures total wall-clock time and computes the throughput.
+    The println! output will appear in the terminal when you run: 
+
+[[bench]]
+name = "max_throughput"
+harness = false
+
+cargo bench --bench max_throughput

@@ -1,5 +1,5 @@
 // examples/03_mem.rs | async + log + SQLite persistence
-use fraud_detection_3::persistence::sqlite::SQLiteScoringResultRepo;
+use fraud_detection_3::persistence::sqlite::SQLiteScoreRepo;
 use fraud_detection_3::{
     domain::transaction::Transaction,
     workers::dispatcher::{self, WorkerMessage},
@@ -14,7 +14,7 @@ use tracing_subscriber::{Layer, Registry, fmt, layer::SubscriberExt, util::Subsc
 
 // For persistence
 // use fraud_detection_3::persistence::in_memory::InMemoryTransactionRepo;
-use fraud_detection_3::persistence::sqlite::SQLiteTransactionRepo;
+use fraud_detection_3::persistence::sqlite::SQLiteTransRepo;
 
 fn init_logging() -> tracing_appender::non_blocking::WorkerGuard {
     // Create a daily rotating file appender in ./logs/
@@ -86,8 +86,8 @@ async fn main() {
     info!("Launching async worker demo...");
     warn!("This is a warning");
 
-    let tx_repo = Arc::new(SQLiteTransactionRepo::new("data.db"));
-    let score_repo = Arc::new(SQLiteScoringResultRepo::new("data.db"));
+    let tx_repo = Arc::new(SQLiteTransRepo::new("data.db"));
+    let score_repo = Arc::new(SQLiteScoreRepo::new("data.db"));
 
     let (tx, rx) = mpsc::channel(10);
 

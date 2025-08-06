@@ -1,17 +1,17 @@
 // src/persistence/sqlite.rs
 
-use crate::domain::repository::TransactionRepository;
+use crate::domain::repository::TransRepository;
 use crate::domain::transaction::Transaction;
 use rusqlite::{Connection, /*Result,*/ params};
 use std::sync::Mutex;
 use tracing::debug;
 
 /// SQLite-based implementation of TransactionRepository
-pub struct SQLiteTransactionRepo {
+pub struct SQLiteTransRepo {
     conn: Mutex<Connection>,
 }
 
-impl SQLiteTransactionRepo {
+impl SQLiteTransRepo {
     /// Initialize a new SQLiteTransactionRepo with a DB file or in-memory DB
     pub fn new(db_path: &str) -> Self {
         let conn = Connection::open(db_path).expect("Failed to open SQLite DB");
@@ -31,7 +31,7 @@ impl SQLiteTransactionRepo {
     }
 }
 
-impl TransactionRepository for SQLiteTransactionRepo {
+impl TransRepository for SQLiteTransRepo {
     fn save(&self, tx: Transaction) {
         let conn = self.conn.lock().unwrap();
         conn.execute("INSERT OR REPLACE INTO transactions (id, amount, currency) VALUES (?1, ?2, ?3)", params![tx.id, tx.amount, tx.currency])

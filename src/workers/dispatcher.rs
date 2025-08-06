@@ -1,15 +1,29 @@
 // src/workers/dispatcher.rs
 
-use crate::domain::repository::{ScoringResultRepository, TransactionRepository};
-use crate::domain::scoring::ScoringResult;
+// This file is used in two compilation modes:
+// - Default: the async worker is launched using Tokio and mpsc.
+// - Bench: a stripped-down version of the processing logic is exposed for Criterion benchmarks,
+//          activated with `--features bench` (for example : cargo bench --features bench --bench end_to_end)
+//
+// Use `#[cfg(not(feature = "bench"))]` for code only needed in normal runtime mode.
+// Use `#[cfg(feature = "bench")]` for benchmark-specific code.
+
+// Used in both runtime and bench mode → no cfg required
+use crate::domain::repository::{ScoreRepository, TransRepository};
+use crate::domain::scoring::Score;
 use crate::domain::transaction::Transaction;
-
-use std::sync::Arc;
-use tokio::sync::mpsc::Receiver;
-use tracing::{info /* , debug*/};
-
-// use rand::Rng; // For score generation
 use rand::random;
+use std::sync::Arc;
+
+// Should I use a cfg_if::cfg_if! {...} block ?
+#[cfg(not(feature = "bench"))]
+use {
+    tokio::sync::mpsc::Receiver,
+    tracing::{info /* , debug*/},
+};
+
+#[cfg(feature = "bench")]
+use crate::persistence::sqlite::{SQLiteScoreRepo, SQLiteTransRepo};
 
 #[derive(Debug)]
 pub enum WorkerMessage {
@@ -18,11 +32,8 @@ pub enum WorkerMessage {
 }
 
 // Updated start_worker
-pub async fn start_worker<TR: TransactionRepository + Send + Sync + 'static, SR: ScoringResultRepository + Send + Sync + 'static>(
-    mut rx: Receiver<WorkerMessage>,
-    tx_repo: Arc<TR>,
-    score_repo: Arc<SR>,
-) {
+#[cfg(not(feature = "bench"))]
+pub async fn start_worker<TR: TransRepository + Send + Sync + 'static, SR: ScoreRepository + Send + Sync + 'static>(mut rx: Receiver<WorkerMessage>, tx_repo: Arc<TR>, score_repo: Arc<SR>) {
     while let Some(msg) = rx.recv().await {
         match msg {
             WorkerMessage::Transaction(tx) => {
@@ -43,7 +54,7 @@ pub async fn start_worker<TR: TransactionRepository + Send + Sync + 'static, SR:
                 let is_fraud = score > 0.8;
 
                 // Build and persist scoring result
-                let result = ScoringResult { id: tx.id.clone(), score, is_fraud };
+                let result = Score { id: tx.id.clone(), score, is_fraud };
 
                 score_repo.save(result.clone());
                 info!(?result, "Scoring result saved");
@@ -55,4 +66,20 @@ pub async fn start_worker<TR: TransactionRepository + Send + Sync + 'static, SR:
             }
         }
     }
+}
+
+// This version avoids tokio and mpsc to isolate the benchmark logic.
+#[cfg(feature = "bench")]
+pub fn process_transaction_bench(tx: Transaction) {
+    let trans_repo = Arc::new(SQLiteTransRepo::new("bench_trans.db"));
+    let score_repo = Arc::new(SQLiteScoreRepo::new("bench_score.db"));
+
+    // Here we simulate the main processing logic from the worker
+    // let score = rand::random::<f64>();
+    let score: f64 = random(); // value in [0.0, 1.0)
+    let is_fraud = score > 0.8;
+    let result = Score { id: tx.id.clone(), score, is_fraud };
+
+    trans_repo.save(tx);
+    score_repo.save(result);
 }

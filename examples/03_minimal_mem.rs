@@ -1,12 +1,12 @@
 // examples/03_repo.rs
 
-use fraud_detection_3::domain::repository::TransactionRepository;
+use fraud_detection_3::domain::repository::TransRepository;
 use fraud_detection_3::domain::transaction::Transaction;
 use fraud_detection_3::persistence::in_memory::InMemoryTransactionRepo;
 use std::sync::Arc;
 
 fn main() {
-    let repo: Arc<dyn TransactionRepository> = Arc::new(InMemoryTransactionRepo::new());
+    let repo: Arc<dyn TransRepository> = Arc::new(InMemoryTransactionRepo::new());
 
     let tx = Transaction {
         id: "tx-001".to_string(),

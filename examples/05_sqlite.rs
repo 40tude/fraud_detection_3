@@ -13,7 +13,7 @@ use tracing_subscriber::{Layer, Registry, fmt, layer::SubscriberExt, util::Subsc
 
 // For persistence
 // use fraud_detection_3::persistence::in_memory::InMemoryTransactionRepo;
-use fraud_detection_3::persistence::sqlite::SQLiteTransactionRepo;
+use fraud_detection_3::persistence::sqlite::SQLiteTransRepo;
 
 fn init_logging() -> tracing_appender::non_blocking::WorkerGuard {
     // Create a daily rotating file appender in ./logs/
@@ -86,7 +86,7 @@ async fn main() {
     warn!("This is a warning");
 
     // let repo = Arc::new(InMemoryTransactionRepo::new());
-    let repo = Arc::new(SQLiteTransactionRepo::new("data.db"));
+    let repo = Arc::new(SQLiteTransRepo::new("data.db"));
 
     let (tx, rx) = mpsc::channel(10);
 

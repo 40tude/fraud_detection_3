@@ -2,6 +2,10 @@
 name = "fraud_detection_3"
 version = "0.1.0"
 edition = "2024"
+autobins = true
+autoexamples = true
+autotests = true
+autobenches = true
 
 
 [dependencies]
@@ -11,3 +15,29 @@ tokio = { version = "1.47.1", features = ["full"] }
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-subscriber = "0.3.19"
+
+# This ensures benches/ are compiled when using `cargo bench`
+# async_tokio for the max_throughput bench with async workers
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports", "async_tokio"] }
+
+# Now we can have #[cfg(feature = "bench")] in workers/dispatcher.rs for example
+[features]
+bench = []
+
+[[bench]]
+name = "sqlite_trans_save"
+harness = false
+
+[[bench]]
+name = "sqlite_score_save"
+harness = false
+
+[[bench]]
+name = "end_to_end"
+harness = false
+
+
+[[bench]]
+name = "max_throughput"
+harness = false

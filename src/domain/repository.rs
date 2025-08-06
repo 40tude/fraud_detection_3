@@ -2,14 +2,14 @@
 
 use crate::domain::transaction::Transaction;
 
-pub trait TransactionRepository: Send + Sync {
+pub trait TransRepository: Send + Sync {
     fn save(&self, tx: Transaction);
     fn get(&self, id: &str) -> Option<Transaction>;
 }
 
-use crate::domain::scoring::ScoringResult;
+use crate::domain::scoring::Score;
 
-pub trait ScoringResultRepository: Send + Sync {
-    fn save(&self, result: ScoringResult);
-    fn get(&self, tx_id: &str) -> Option<ScoringResult>;
+pub trait ScoreRepository: Send + Sync {
+    fn save(&self, result: Score);
+    fn get(&self, tx_id: &str) -> Option<Score>;
 }

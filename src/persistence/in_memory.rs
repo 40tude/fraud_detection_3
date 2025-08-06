@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use crate::domain::repository::TransactionRepository;
+use crate::domain::repository::TransRepository;
 use crate::domain::transaction::Transaction;
 
 pub struct InMemoryTransactionRepo {
@@ -16,7 +16,7 @@ impl InMemoryTransactionRepo {
     }
 }
 
-impl TransactionRepository for InMemoryTransactionRepo {
+impl TransRepository for InMemoryTransactionRepo {
     fn save(&self, tx: Transaction) {
         let tx_id = tx.id.clone(); // keep id before moving tx
         self.store.lock().unwrap().insert(tx_id.clone(), tx);
