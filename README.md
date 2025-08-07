@@ -1,5 +1,9 @@
 https://medium.com/@theopinionatedev/the-3-patterns-behind-every-scalable-rust-system-ive-built-06377a2fdad5
 
+- Trait-based state machines
+- Channel-driven actors
+- Command Bus 
+
 
 ```
             +---------------------+
@@ -14,7 +18,7 @@ https://medium.com/@theopinionatedev/the-3-patterns-behind-every-scalable-rust-s
 | Validation|   | State Machine|   | Persistence  |
 +-----------+   +--------------+   +--------------+
                        |
-                  [ Channel Bus ]
+                  [ Channel Bus ] 
                        |
                +-----------------+
                | Worker Executors|
@@ -22,6 +26,41 @@ https://medium.com/@theopinionatedev/the-3-patterns-behind-every-scalable-rust-s
 
 ```
 
+```
+            +---------------------+
+            |   Command Receiver  |  # Receives transactions (HTTP/gRPC/Kafka)
+            +----------+----------+
+                       |
+                [ Command Bus ]  # Routes to validation or urgent processing
+                       |
+      +----------------+---------------+
+      |                |               |
++-----------+   +--------------+   +--------------+
+| Validation|   | State Machine|   | Persistence  |  
++-----------+   +--------------+   +--------------+
+  # Checks format,    # State transitions         # Stores in DB (SQL/Redis)
+  creditworthiness    (ex: "Clean" → "Suspicious" → "Confirmed Fraud")
+                       |
+                  [ Channel Bus ]  # Distributes to specialized workers
+                       |
+               +-----------------+
+               | Worker Executors|  # Heavy tasks: ML, notifications, audits
+               +-----------------+
+
+```
+
+Command Bus / Dispatcher
+This is a logical abstraction:
+It receives a command (e.g., a transaction to be processed)
+It determines which service or component should handle it
+It forwards it to the appropriate channel or worker.
+In the project, the dispatcher::start_worker(...) function embodies this role by listening to a Receiver<WorkerMessage>.
+
+Channel Bus
+It is a technical infrastructure, a communication channel:
+In the project, it is a tokio::mpsc channel.
+It transports WorkerMessages (e.g., Transaction, Shutdown) between components.
+So the “Channel Bus” is the data pipe on which the Dispatcher relies.
 
 
 
